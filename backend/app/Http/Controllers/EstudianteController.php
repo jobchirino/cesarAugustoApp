@@ -21,6 +21,7 @@ class EstudianteController extends Controller
             'cedula_estudiantil' => ['required', 'string', 'unique:estudiantes,cedula_estudiantil', 'max:50'],
             'genero' => ['required', 'in:Masculino,Femenino'],
             'registro_medico' => ['nullable', 'string'],
+            'fecha_nacimiento' => ['nullable', 'date'],
             'asistencias' => ['nullable', 'integer', 'min:0'],
             'inasistencias' => ['nullable', 'integer', 'min:0'],
             'observaciones_inasistencias' => ['nullable', 'string'],
@@ -74,6 +75,7 @@ class EstudianteController extends Controller
             'cedula_estudiantil' => ['required', 'string', Rule::unique('estudiantes')->ignore($estudiante->id), 'max:50'],
             'genero' => ['required', 'in:Masculino,Femenino'],
             'registro_medico' => ['nullable', 'string'],
+            'fecha_nacimiento' => ['nullable', 'date'],
             'grado_id' => ['required', 'exists:grados_secciones,id'],
             'representante' => ['sometimes', 'array'],
             'representante.nombre_apellido' => ['required_with:representante', 'string', 'max:255'],
@@ -87,6 +89,7 @@ class EstudianteController extends Controller
             'cedula_estudiantil' => $validated['cedula_estudiantil'],
             'genero' => $validated['genero'],
             'registro_medico' => $validated['registro_medico'] ?? null,
+            'fecha_nacimiento' => $validated['fecha_nacimiento'] ?? null,
             'grado_id' => $validated['grado_id'],
         ]);
 

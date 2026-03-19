@@ -17,6 +17,7 @@ interface Estudiante {
   cedula_estudiantil: string;
   genero: string;
   registro_medico: string | null;
+  fecha_nacimiento: string | null;
   grado_id: number;
   representante?: Representante;
 }
@@ -45,6 +46,7 @@ export default function EditarEstudiantePage() {
     cedula_estudiantil: '',
     genero: '',
     registro_medico: '',
+    fecha_nacimiento: '',
     grado_id: '',
   });
 
@@ -74,6 +76,7 @@ export default function EditarEstudiantePage() {
           cedula_estudiantil: data.cedula_estudiantil || '',
           genero: data.genero || '',
           registro_medico: data.registro_medico || '',
+          fecha_nacimiento: data.fecha_nacimiento ? data.fecha_nacimiento.substring(0, 10) : '',
           grado_id: data.grado_id?.toString() || '',
         });
         if (data.representante) {
@@ -104,6 +107,7 @@ export default function EditarEstudiantePage() {
         cedula_estudiantil: estudianteForm.cedula_estudiantil,
         genero: estudianteForm.genero,
         registro_medico: estudianteForm.registro_medico || null,
+        fecha_nacimiento: estudianteForm.fecha_nacimiento || null,
         grado_id: parseInt(estudianteForm.grado_id),
         representante: {
           nombre_apellido: representanteForm.nombre_apellido,
@@ -227,6 +231,17 @@ export default function EditarEstudiantePage() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Fecha de Nacimiento
+                </label>
+                <input
+                  type="date"
+                  value={estudianteForm.fecha_nacimiento}
+                  onChange={(e) => setEstudianteForm({ ...estudianteForm, fecha_nacimiento: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">

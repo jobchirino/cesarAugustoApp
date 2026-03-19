@@ -10,6 +10,7 @@ interface EstudianteData {
   genero: string;
   grado_id: string;
   registro_medico: string;
+  fecha_nacimiento: string;
 }
 
 interface RepresentanteData {
@@ -45,6 +46,7 @@ export default function AgregarEstudiantePage() {
     genero: '',
     grado_id: '',
     registro_medico: '',
+    fecha_nacimiento: '',
   });
 
   const [representante, setRepresentante] = useState<RepresentanteData>({
@@ -357,6 +359,18 @@ export default function AgregarEstudiantePage() {
                   {grados.length === 0 && !error && (
                     <p className="mt-1 text-xs text-yellow-600">No hay grados disponibles. Crea uno primero.</p>
                   )}
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Fecha de Nacimiento
+                  </label>
+                  <input
+                    type="date"
+                    value={estudiante.fecha_nacimiento}
+                    onChange={(e) => handleEstudianteChange('fecha_nacimiento', e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  />
                 </div>
 
                 <div className="col-span-2">

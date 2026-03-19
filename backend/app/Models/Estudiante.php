@@ -14,10 +14,15 @@ class Estudiante extends Model
         'cedula_estudiantil',
         'genero',
         'registro_medico',
+        'fecha_nacimiento',
         'asistencias',
         'inasistencias',
         'observaciones_inasistencias',
         'grado_id',
+    ];
+
+    protected $casts = [
+        'fecha_nacimiento' => 'date:Y-m-d',
     ];
 
     public function grado(): BelongsTo

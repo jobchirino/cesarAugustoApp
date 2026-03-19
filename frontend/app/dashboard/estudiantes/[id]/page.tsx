@@ -39,6 +39,7 @@ interface Estudiante {
   cedula_estudiantil: string;
   genero: string;
   registro_medico: string | null;
+  fecha_nacimiento: string | null;
   grado_id: number;
   cantidad_asistencias: number;
   cantidad_inasistencias: number;
@@ -221,6 +222,12 @@ export default function EstudianteDetallePage() {
                 <span className="text-gray-500">Género:</span>
                 <span className="text-gray-800 font-medium">{estudiante.genero}</span>
               </div>
+              {estudiante.fecha_nacimiento && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Fecha de Nacimiento:</span>
+                  <span className="text-gray-800 font-medium">{estudiante.fecha_nacimiento.substring(0, 10)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-500">Grado/Sección:</span>
                 <span className="text-gray-800 font-medium">
