@@ -42,4 +42,4 @@ Si deseas correr este proyecto en tu máquina local, sigue estos pasos:
 
 ### 1. Clonar el repositorio
 ```bash
-git clone [https://github.com/jobchirino/cesarAugustoApp](https://github.com/jobchirino/cesarAugustoApp)
+git clone https://github.com/jobchirino/cesarAugustoApp
