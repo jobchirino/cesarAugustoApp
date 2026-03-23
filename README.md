@@ -29,7 +29,8 @@ Como desarrollador con años de experiencia construyendo interfaces y arquitectu
   * Flujo de recuperación de contraseña *sin dependencias de email*, utilizando preguntas de seguridad encriptadas configuradas en el primer inicio de sesión.
   * Protección de rutas en el frontend (Route Guards) para usuarios no autenticados o con configuración pendiente.
 * **📊 Dashboard Administrativo:** Panel de control con estadísticas en tiempo real de estudiantes y grados activos.
-* **👨‍🎓 Gestión de Estudiantes y Representantes:** * Formularios multi-paso (Multi-part forms) con manejo de estados fluidos en React.
+* **👨‍🎓 Gestión de Estudiantes y Representantes:**
+  * Formularios multi-paso (Multi-part forms) con manejo de estados fluidos en React.
   * Actualización parcial de datos manteniendo la integridad referencial.
 * **📚 Control Académico:**
   * CRUD de Grados y Secciones con validaciones de negocio estrictas (ej. evitar duplicidad de secciones).
