@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api, { setAuthToken } from '@/lib/api';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -50,7 +51,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-primary-800">
+    <div className="min-h-screen flex items-center justify-around bg-primary-800">
+      <Image 
+        src={'/logo.png'}
+        className=''
+        alt="Logo"
+        width={500}
+        height={500}
+      />
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-2xl">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -136,12 +144,12 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        {/* <div className="mt-6 text-center">
           <span className="text-gray-600">¿No tienes cuenta? </span>
           <Link href="/register" className="text-primary-600 hover:text-primary-800 font-medium">
             Crear Cuenta
           </Link>
-        </div>
+        </div> */}
       </div>
     </div>
   );

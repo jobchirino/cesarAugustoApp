@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api, { getAuthToken } from '@/lib/api';
@@ -12,9 +12,24 @@ interface Estudiante {
   genero: string;
   grado_id: number;
   grado?: {
+    id: number;
     grado: string;
     seccion: string;
   };
+}
+
+interface GradoSeccion {
+  id: number;
+  grado: string;
+  seccion: string;
+  docente: string;
+}
+
+interface PaginationInfo {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
 }
 
 export default function EstudiantesPage() {
@@ -25,6 +40,53 @@ export default function EstudiantesPage() {
   const [estudianteToDelete, setEstudianteToDelete] = useState<Estudiante | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
+  
+  const [busqueda, setBusqueda] = useState('');
+  const [busquedaInput, setBusquedaInput] = useState('');
+  const [gradoFiltro, setGradoFiltro] = useState<string>('');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  
+  const [grados, setGrados] = useState<GradoSeccion[]>([]);
+
+  const fetchGrados = useCallback(() => {
+    api.get('/grados-secciones')
+      .then((res) => setGrados(res.data))
+      .catch((err) => console.error('Error al obtener grados: ', err));
+  }, []);
+
+  const fetchEstudiantes = useCallback(() => {
+    setLoading(true);
+    setError('');
+
+    const params = new URLSearchParams();
+    params.append('page', paginaActual.toString());
+    
+    if (busqueda.trim()) {
+      params.append('search', busqueda.trim());
+    }
+    if (gradoFiltro) {
+      params.append('grado_id', gradoFiltro);
+    }
+
+    api.get(`/estudiantes?${params.toString()}`)
+      .then((res) => {
+        setEstudiantes(res.data.data);
+        setPagination({
+          current_page: res.data.current_page,
+          last_page: res.data.last_page,
+          per_page: res.data.per_page,
+          total: res.data.total,
+        });
+      })
+      .catch((err) => {
+        console.error('Error al obtener estudiantes: ', err);
+        setError('Error al cargar los estudiantes');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [paginaActual, busqueda, gradoFiltro]);
 
   useEffect(() => {
     const token = getAuthToken();
@@ -34,9 +96,7 @@ export default function EstudiantesPage() {
     }
 
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/security-questions/status`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
       .then((data) => {
@@ -48,20 +108,40 @@ export default function EstudiantesPage() {
         router.push('/login');
       });
 
-    fetchEstudiantes();
-  }, [router]);
+    fetchGrados();
+  }, [router, fetchGrados]);
 
-  const fetchEstudiantes = () => {
-    api.get('/estudiantes')
-      .then((res) => {
-        setEstudiantes(res.data);
-      })
-      .catch((err) => {
-        console.error('Error al obtener estudiantes: ', err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+  useEffect(() => {
+    fetchEstudiantes();
+  }, [fetchEstudiantes]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (busquedaInput !== busqueda) {
+        setBusqueda(busquedaInput);
+        setPaginaActual(1);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [busquedaInput, busqueda]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusqueda(busquedaInput);
+    setPaginaActual(1);
+  };
+
+  const handleGradoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setGradoFiltro(e.target.value);
+    setPaginaActual(1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (pagination && newPage >= 1 && newPage <= pagination.last_page) {
+      setPaginaActual(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleDeleteClick = (estudiante: Estudiante) => {
@@ -78,7 +158,7 @@ export default function EstudiantesPage() {
 
     try {
       await api.delete(`/estudiantes/${estudianteToDelete.id}`);
-      setEstudiantes(estudiantes.filter(e => e.id !== estudianteToDelete.id));
+      fetchEstudiantes();
       setShowModal(false);
       setEstudianteToDelete(null);
     } catch (err: unknown) {
@@ -107,7 +187,9 @@ export default function EstudiantesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Estudiantes</h1>
-          <p className="text-gray-500">Lista de estudiantes registrados</p>
+          <p className="text-gray-500">
+            {pagination ? `${pagination.total} estudiantes registrados` : 'Cargando...'}
+          </p>
         </div>
         <Link
           href="/dashboard/estudiantes/agregar"
@@ -115,6 +197,53 @@ export default function EstudiantesPage() {
         >
           + Agregar Estudiante
         </Link>
+      </div>
+
+      <div className="mb-4 flex gap-3">
+        <form onSubmit={handleSearchSubmit} className="flex-1 max-w-md">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Buscar por nombre o cédula..."
+              value={busquedaInput}
+              onChange={(e) => setBusquedaInput(e.target.value)}
+              className="block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+            {busquedaInput && (
+              <button
+                type="button"
+                onClick={() => {
+                  setBusquedaInput('');
+                  setBusqueda('');
+                  setPaginaActual(1);
+                }}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </form>
+
+        <select
+          value={gradoFiltro}
+          onChange={handleGradoChange}
+          className="px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition min-w-[180px]"
+        >
+          <option value="">Todos los grados</option>
+          {grados.map((grado) => (
+            <option key={grado.id} value={grado.id}>
+              {grado.grado} - Sección {grado.seccion}
+            </option>
+          ))}
+        </select>
       </div>
 
       {error && (
@@ -138,14 +267,22 @@ export default function EstudiantesPage() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                    Cargando...
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Cargando estudiantes...</span>
+                    </div>
                   </td>
                 </tr>
               ) : estudiantes.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                    No hay estudiantes registrados
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                    {busqueda || gradoFiltro 
+                      ? 'No se encontraron estudiantes con los filtros aplicados' 
+                      : 'No hay estudiantes registrados'}
                   </td>
                 </tr>
               ) : (
@@ -200,6 +337,40 @@ export default function EstudiantesPage() {
             </tbody>
           </table>
         </div>
+
+        {pagination && pagination.last_page > 1 && (
+          <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Mostrando <span className="font-medium">{(pagination.current_page - 1) * pagination.per_page + 1}</span> a{' '}
+              <span className="font-medium">
+                {Math.min(pagination.current_page * pagination.per_page, pagination.total)}
+              </span>{' '}
+              de <span className="font-medium">{pagination.total}</span> estudiantes
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(pagination.current_page - 1)}
+                disabled={pagination.current_page === 1}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Anterior
+              </button>
+              <button
+                onClick={() => handlePageChange(pagination.current_page + 1)}
+                disabled={pagination.current_page === pagination.last_page}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Siguiente
+                <svg className="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {showModal && (

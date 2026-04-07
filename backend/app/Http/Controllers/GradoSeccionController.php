@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\GradoSeccion;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -92,5 +93,31 @@ class GradoSeccionController extends Controller
                 'message' => 'Grado no encontrado.'
             ], 404);
         }
+    }
+
+    public function descargarReporte($id)
+    {
+        $grado = GradoSeccion::with(['estudiantes.asistencias', 'estudiantes.notasAcademicas'])->findOrFail($id);
+
+        $estudiantesData = $grado->estudiantes->map(function ($estudiante) {
+            
+            $totalAsistencias = $estudiante->asistencias()->where('presente', true)->count();
+            $totalInasistencias = $estudiante->asistencias()->where('presente', false)->count();
+            $lapsosEvaluados = $estudiante->notasAcademicas()->count();
+
+            return [
+                'nombre' => $estudiante->nombre_apellido,
+                'total_asistencias' => $totalAsistencias,
+                'total_inasistencias' => $totalInasistencias,
+                'lapsos_evaluados' => $lapsosEvaluados,
+            ];
+        });
+
+        $pdf = Pdf::loadView('reportes.grado', [
+            'grado' => $grado,
+            'estudiantes' => $estudiantesData,
+        ]);
+
+        return $pdf->download('reporte_' . $grado->grado . '_seccion_' . $grado->seccion . '.pdf');
     }
 }

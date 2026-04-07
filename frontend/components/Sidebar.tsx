@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { setAuthToken } from '@/lib/api';
@@ -10,6 +10,7 @@ interface MenuItem {
   icon: string;
   href?: string;
   submenu?: { name: string; href: string }[];
+  requiresSuperAdmin?: boolean;
 }
 
 const menuItems: MenuItem[] = [
@@ -23,6 +24,8 @@ const menuItems: MenuItem[] = [
     ]
   },
   { name: 'Grados', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10', href: '/dashboard/grados' },
+  { name: 'Historial', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', href: '/dashboard/historial' },
+  { name: 'Gestionar Usuarios', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', href: '/dashboard/usuarios', requiresSuperAdmin: true },
 ];
 
 interface SidebarProps {
@@ -31,7 +34,22 @@ interface SidebarProps {
 
 export default function Sidebar({ activeItem = 'Inicio' }: SidebarProps) {
   const [openSubmenu, setOpenSubmenu] = useState<string | null>('Estudiantes');
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/user`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setIsSuperAdmin(data.id === 1);
+        })
+        .catch(() => setIsSuperAdmin(false));
+    }
+  }, []);
 
   const toggleSubmenu = (name: string) => {
     setOpenSubmenu(openSubmenu === name ? null : name);
@@ -62,7 +80,10 @@ export default function Sidebar({ activeItem = 'Inicio' }: SidebarProps) {
       </div>
 
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {menuItems.map((item) => (
+        {menuItems.map((item) => {
+          if (item.requiresSuperAdmin && !isSuperAdmin) return null;
+          
+          return (
           <div key={item.name}>
             {item.submenu ? (
               <>
@@ -123,7 +144,8 @@ export default function Sidebar({ activeItem = 'Inicio' }: SidebarProps) {
               </Link>
             )}
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       <div className="p-3 border-t border-blue-800">

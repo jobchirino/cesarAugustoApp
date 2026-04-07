@@ -70,4 +70,11 @@ class AuthController extends Controller
             'message' => 'Usuario eliminado correctamente.',
         ]);
     }
+
+    public function isAnyUserRegistered()
+    {
+        return response()->json([
+            'registered' => User::count() > 0,
+        ]);
+    }
 }

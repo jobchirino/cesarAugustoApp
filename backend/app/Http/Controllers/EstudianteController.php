@@ -8,9 +8,24 @@ use Illuminate\Validation\Rule;
 
 class EstudianteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $estudiantes = Estudiante::with(['grado'])->get();
+        $search = $request->input('search');
+        $gradoId = $request->input('grado_id');
+
+        $estudiantes = Estudiante::with(['grado'])
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nombre_apellido', 'like', "%{$search}%")
+                      ->orWhere('cedula_estudiantil', 'like', "%{$search}%");
+                });
+            })
+            ->when($gradoId, function ($query) use ($gradoId) {
+                $query->where('grado_id', $gradoId);
+            })
+            ->orderBy('nombre_apellido')
+            ->paginate(10);
+
         return response()->json($estudiantes);
     }
 

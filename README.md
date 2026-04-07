@@ -42,4 +42,26 @@ Si deseas correr este proyecto en tu máquina local, sigue estos pasos:
 
 ### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/jobchirino/cesarAugustoApp
+git clone https://github.com/jobchirino/cesarAugustoApp 
+```
+
+### 2. Configurar el Backend (Laravel)
+```bash
+cd backend
+composer install
+cp .env.example .env
+php artisan key:generate
+```
+Asegúrate de tener habilitadas las extensiones pdo_sqlite y sqlite3 en tu archivo `php.ini`.
+
+### 3. Configurar el Frontend (Next.js)
+```bash
+cd frontend
+npm install
+```
+Crea un archivo .env.local en la raíz del frontend y agrega la URL de tu API:
+`NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api`
+```bash
+npm run dev
+```
+El frontend estará disponible en `http://localhost:3000`. ¡Abre esa URL en tu navegador y disfruta del sistema!

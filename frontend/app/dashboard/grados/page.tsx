@@ -36,6 +36,8 @@ export default function GradosPage() {
     docente: '',
   });
 
+  const [descargandoId, setDescargandoId] = useState<number | null>(null);
+
   useEffect(() => {
     const token = getAuthToken();
     if (!token) {
@@ -43,7 +45,7 @@ export default function GradosPage() {
       return;
     }
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/security-questions/status`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/security-questions/status`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -197,6 +199,40 @@ export default function GradosPage() {
       fieldError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'
     }`;
 
+  const handleDescargarReporte = async (gradoId: number) => {
+    setDescargandoId(gradoId);
+    try {
+      const token = getAuthToken();
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/grados-secciones/${gradoId}/reporte`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Error al generar el reporte');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `reporte_grado_${gradoId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error al descargar reporte:', err);
+      alert('Error al descargar el reporte');
+    } finally {
+      setDescargandoId(null);
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -271,6 +307,23 @@ export default function GradosPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                   Editar
+                </button>
+                <button
+                  onClick={() => handleDescargarReporte(grado.id)}
+                  disabled={descargandoId === grado.id}
+                  className="flex-1 px-3 py-2 text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition flex items-center justify-center gap-1 disabled:opacity-50"
+                >
+                  {descargandoId === grado.id ? (
+                    <svg className="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  )}
+                  {descargandoId === grado.id ? 'Generando...' : 'Reporte'}
                 </button>
               </div>
             </div>

@@ -65,6 +65,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <main className="flex-1 p-6 relative">
           {children}
         </main>
+        <footer className="text-xs text-center text-gray-500 py-4 mt-auto border-t border-gray-200 bg-white">
+          © 2026 Unidad Educativa Cesar Augusto Agreda. 
+          Esta obra está bajo una{' '}
+          <a 
+            href="https://creativecommons.org/licenses/by-nc/4.0/deed.es" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            Licencia Creative Commons Atribución-NoComercial 4.0 Internacional (CC BY-NC 4.0)
+          </a>
+        </footer>
       </div>
     </div>
   );
