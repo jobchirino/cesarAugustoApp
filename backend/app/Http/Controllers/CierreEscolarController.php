@@ -16,7 +16,7 @@ class CierreEscolarController extends Controller
 {
     public function cierre(Request $request)
     {
-        $añoEscolar = date('Y') . '-' . (date('Y') + 1);
+        $añoEscolar = (date('Y') - 1) . '-' . date('Y');
         $lapsoOptions = ['1', '2', '3', 'Final'];
 
         $estudiantesActivos = Estudiante::with('grado')->get();
